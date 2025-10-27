@@ -1462,8 +1462,8 @@
             elements.typingInput.disabled = false;
             elements.typingInput.focus();
 
-            gameState.zombies.forEach(z => removeZombie(z.id));
-            gameState.zombies = [];
+            // Clear all zombies from DOM and array
+            clearAllZombies();
 
             updateTimerDisplay();
 
@@ -1837,9 +1837,22 @@
             elements.timerText.textContent = Math.ceil(gameState.roundTimeRemaining) + 's';
         }
 
+        // Clear all zombies from screen
+        function clearAllZombies() {
+            // Remove all zombie elements from DOM
+            const allZombieElements = elements.gameCanvas.querySelectorAll('.zombie');
+            allZombieElements.forEach(el => el.remove());
+
+            // Clear zombie array
+            gameState.zombies = [];
+        }
+
         // Round complete
         function roundComplete() {
             gameState.roundActive = false;
+
+            // Clear all remaining zombies from DOM and array
+            clearAllZombies();
 
             // Perfect round achievement
             if (gameState.roundDamageTaken === 0 && !gameState.achievements.perfectRound) {
@@ -2049,7 +2062,7 @@
                     badge.className = 'ability-badge';
 
                     const names = {
-                        shield: '🛡️ ' + (currentLang === 'zh' ? '護盾' : 'Shield'),
+                        shield: '🛡��� ' + (currentLang === 'zh' ? '護盾' : 'Shield'),
                         slowmo: '🐌 ' + (currentLang === 'zh' ? '慢動作' : 'Slow-Mo'),
                         multishot: '🎯 ' + (currentLang === 'zh' ? '多重射擊' : 'Multi-Shot'),
                         rapidfire: '🔥 ' + (currentLang === 'zh' ? '快速射擊' : 'Rapid Fire')
