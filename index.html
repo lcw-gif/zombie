@@ -1586,7 +1586,7 @@
                 const zombieEl = document.getElementById('zombie-' + zombie.id);
                 if (!zombieEl) return;
 
-                const currentTop = parseInt(zombieEl.style.top || '-150');
+                const currentTop = parseFloat(zombieEl.style.top) || -150;
                 const newTop = currentTop + (zombie.speed / 60) * speedMultiplier;
 
                 zombieEl.style.top = newTop + 'px';
