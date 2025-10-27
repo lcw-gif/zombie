@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type vs Zombies - Keyboard Training Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .dark body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        #gameContainer {
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dark #gameContainer {
+            background: rgba(30, 30, 30, 0.95);
+        }
+
+        /* Start Screen */
+        #startScreen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #startScreen h1 {
+            font-size: clamp(2rem, 6vw, 4rem);
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: clamp(0.8rem, 1.5vw, 1rem);
+        }
+
+        .lang-btn.active,
+        .lang-btn:hover {
+            background: white;
+            color: #ff6b6b;
+        }
+
+        #startScreen p {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            background: white;
+            color: #ff6b6b;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Mode Selection Screen */
+        #modeScreen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #modeScreen h2 {
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .mode-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 3px solid transparent;
+        }
+
+        .dark .mode-card {
+            background: #2d2d2d;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-card.beginner { border-color: #4caf50; }
+        .mode-card.intermediate { border-color: #2196f3; }
+        .mode-card.advance { border-color: #ff9800; }
+        .mode-card.devil { border-color: #f44336; }
+        .mode-card.god { border-color: #9c27b0; }
+
+        .mode-icon {
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 10px;
+        }
+
+        .mode-name {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .dark .mode-name {
+            color: white;
+        }
+
+        .mode-desc {
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .dark .mode-desc {
+            color: #aaa;
+        }
+
+        .mode-stats {
+            font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+            color: #999;
+            text-align: left;
+        }
+
+        .dark .mode-stats {
+            color: #888;
+        }
+
+        /* Game Screen */
+        #gameScreen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 50%, #90ee90 100%);
+        }
+
+        .dark #gameScreen {
+            background: linear-gradient(to bottom, #1a2332 0%, #2d3e50 50%, #1e3a2f 100%);
+        }
+
+        /* HUD */
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            font-weight: bold;
+        }
+
+        #healthBar, #timerBar {
+            width: 150px;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid white;
+        }
+
+        #healthFill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757 0%, #ff6348 100%);
+            transition: width 0.3s;
+            border-radius: 15px;
+        }
+
+        #timerFill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.3s;
+            border-radius: 15px;
+        }
+
+        /* Game Canvas */
+        #gameCanvas {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .zombie {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: zombieWalk 0.8s infinite;
+            cursor: crosshair;
+            filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.3));
+            transition: transform 0.1s;
+        }
+
+        @keyframes zombieWalk {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+
+        .zombie-body {
+            width: 70px;
+            height: 90px;
+            background: linear-gradient(135deg, #6b8e23 0%, #556b2f 100%);
+            border-radius: 15px 15px 10px 10px;
+            position: relative;
+            border: 3px solid #3a4a1f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .zombie-head {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #8fbc8f 0%, #6b8e23 100%);
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            top: -30px;
+            border: 3px solid #3a4a1f;
+            box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .zombie-eyes {
+            display: flex;
+            gap: 12px;
+            position: absolute;
+            top: 18px;
+        }
+
+        .eye {
+            width: 12px;
+            height: 14px;
+            background: radial-gradient(circle, #ff4757 0%, #8b0000 100%);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: black;
+            border-radius: 50%;
+            top: 4px;
+            left: 3px;
+        }
+
+        .zombie-mouth {
+            position: absolute;
+            top: 35px;
+            width: 30px;
+            height: 12px;
+            border: 2px solid #3a4a1f;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .zombie-arms {
+            position: absolute;
+            width: 100%;
+            height: 40px;
+            top: 10px;
+        }
+
+        .arm {
+            position: absolute;
+            width: 15px;
+            height: 50px;
+            background: linear-gradient(135deg, #8fbc8f 0%, #6b8e23 100%);
+            border-radius: 8px;
+            border: 2px solid #3a4a1f;
+        }
+
+        .arm.left {
+            left: -10px;
+            transform: rotate(-30deg);
+        }
+
+        .arm.right {
+            right: -10px;
+            transform: rotate(30deg);
+        }
+
+        .zombie-legs {
+            position: absolute;
+            width: 100%;
+            bottom: -25px;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 15px;
+        }
+
+        .leg {
+            width: 18px;
+            height: 30px;
+            background: linear-gradient(135deg, #6b8e23 0%, #556b2f 100%);
+            border-radius: 0 0 8px 8px;
+            border: 2px solid #3a4a1f;
+        }
+
+        .zombie-word {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            margin-top: 15px;
+            border: 2px solid #333;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+        }
+
+        .zombie.shortcut .zombie-body,
+        .zombie.shortcut .zombie-head,
+        .zombie.shortcut .arm,
+        .zombie.shortcut .leg {
+            background: linear-gradient(135deg, #ffd700 0%, #ff9800 100%);
+            border-color: #cc7a00;
+        }
+
+        .zombie.shortcut .zombie-word {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-color: #ff9800;
+            animation: glow 1s infinite;
+        }
+
+        .zombie.bonus .zombie-body,
+        .zombie.bonus .zombie-head,
+        .zombie.bonus .arm,
+        .zombie.bonus .leg {
+            background: linear-gradient(135deg, #ff1744 0%, #d50000 100%);
+            border-color: #8b0000;
+        }
+
+        .zombie.bonus .zombie-word {
+            background: linear-gradient(135deg, #ff1744 0%, #ff5252 100%);
+            border-color: #d50000;
+            animation: bonusGlow 0.8s infinite;
+        }
+
+        .zombie.speed .zombie-body,
+        .zombie.speed .zombie-head,
+        .zombie.speed .arm,
+        .zombie.speed .leg {
+            background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+            border-color: #006064;
+        }
+
+        .zombie.speed .zombie-word {
+            background: linear-gradient(135deg, #00bcd4 0%, #4dd0e1 100%);
+            border-color: #0097a7;
+            animation: speedGlow 0.5s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 3px 10px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 3px 20px rgba(255, 215, 0, 0.8); }
+        }
+
+        @keyframes bonusGlow {
+            0%, 100% { box-shadow: 0 3px 15px rgba(255, 23, 68, 0.6); }
+            50% { box-shadow: 0 3px 25px rgba(255, 23, 68, 1); }
+        }
+
+        @keyframes speedGlow {
+            0%, 100% { box-shadow: 0 3px 10px rgba(0, 188, 212, 0.5); }
+            50% { box-shadow: 0 3px 20px rgba(0, 188, 212, 0.9); }
+        }
+
+        .zombie-word .typed {
+            color: #4caf50;
+        }
+
+        .zombie-hp-bar {
+            width: 70px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.6);
+        }
+
+        .zombie-hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50 0%, #8bc34a 100%);
+            transition: width 0.2s;
+        }
+
+        /* Typing Area */
+        #typingArea {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-top: 3px solid #333;
+        }
+
+        #typingInput {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            border: 3px solid #4caf50;
+            border-radius: 10px;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            background: white;
+            color: #333;
+        }
+
+        .dark #typingInput {
+            background: #2d2d2d;
+            color: #fff;
+        }
+
+        /* Shop Screen */
+        #shopScreen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #shopScreen h2 {
+            text-align: center;
+            color: white;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .shop-stats {
+            text-align: center;
+            color: white;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .shop-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .dark .shop-item {
+            background: #2d2d2d;
+            color: white;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .shop-item h3 {
+            color: #4facfe;
+            margin-bottom: 10px;
+            font-size: clamp(1rem, 2vw, 1.3rem);
+        }
+
+        .dark .shop-item h3 {
+            color: #00f2fe;
+        }
+
+        .shop-item p {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: clamp(0.8rem, 1.8vw, 1rem);
+        }
+
+        .dark .shop-item p {
+            color: #aaa;
+        }
+
+        .shop-item .price {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            margin-bottom: 10px;
+        }
+
+        .shop-item button {
+            padding: 10px 25px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+        }
+
+        .shop-item button:hover {
+            background: #45a049;
+        }
+
+        .shop-item button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #continueBtn {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 50px;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+        }
+
+        /* Game Over Screen */
+        #gameOverScreen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        #gameOverScreen h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            margin-bottom: 30px;
+        }
+
+        #nameInput {
+            padding: 15px 20px;
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            border: none;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        #leaderboard {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            max-width: 500px;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+        }
+
+        .leaderboard-entry:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-entry.current {
+            background: rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+        }
+
+        /* Active Abilities Display */
+        #activeAbilities {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .ability-badge {
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: clamp(0.8rem, 1.8vw, 1rem);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            animation: badgePulse 1s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Particle Effects */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particleFloat 1s forwards;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        /* Combo Display */
+        #comboDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Achievement Toast */
+        .achievement-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: linear-gradient(135deg, #ffd700 0%, #ff9800 100%);
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: toastSlide 3s forwards;
+        }
+
+        @keyframes toastSlide {
+            0% { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+            10% { transform: translateX(-50%) translateY(0); opacity: 1; }
+            90% { transform: translateX(-50%) translateY(0); opacity: 1; }
+            100% { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+        }
+
+        .instructions ul {
+            list-style-position: inside;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            line-height: 1.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mode-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .language-selector {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- Start Screen -->
+        <div id="startScreen">
+            <div class="language-selector">
+                <button class="lang-btn active" onclick="setLanguage('en')">English</button>
+                <button class="lang-btn" onclick="setLanguage('zh')">繁體中文</button>
+            </div>
+            <h1 data-i18n="title">🧟 Type vs Zombies 🧟</h1>
+            <p data-i18n="subtitle">Type words and keyboard shortcuts to survive the zombie apocalypse! Train your typing skills while having fun!</p>
+            <div class="instructions">
+                <h3 data-i18n="howToPlay">📖 How to Play:</h3>
+                <ul>
+                    <li data-i18n="instruction1">Type words shown above zombies to damage them</li>
+                    <li data-i18n="instruction2">🏅 Golden zombies need keyboard shortcuts (Ctrl+C, Ctrl+T, Ctrl+F, etc.) - Worth bonus coins!</li>
+                    <li data-i18n="instruction3">🔴 Red zombies require fast typing - Worth big rewards!</li>
+                    <li data-i18n="instruction4">💙 Blue zombies are super fast - Type quick!</li>
+                    <li data-i18n="instruction5">Survive timed rounds to earn coins and upgrades</li>
+                </ul>
+            </div>
+            <button class="btn" onclick="showModeSelection()" data-i18n="startGame">🎮 Start Game</button>
+        </div>
+
+        <!-- Mode Selection Screen -->
+        <div id="modeScreen">
+            <h2 data-i18n="selectDifficulty">Select Difficulty Level</h2>
+            <div class="mode-grid">
+                <div class="mode-card beginner" onclick="startGameWithMode('beginner')">
+                    <div class="mode-icon">🌱</div>
+                    <div class="mode-name" data-i18n="modeBeginner">Beginner</div>
+                    <div class="mode-desc" data-i18n="modeBeginnerDesc">Perfect for learning! Slow zombies, more time</div>
+                    <div class="mode-stats">
+                        <div data-i18n="zombieSpeed">⚡ Speed: Very Slow</div>
+                        <div data-i18n="zombieHP">❤️ HP: Low</div>
+                        <div data-i18n="roundTime">⏱️ Time: 25s</div>
+                    </div>
+                </div>
+
+                <div class="mode-card intermediate" onclick="startGameWithMode('intermediate')">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-name" data-i18n="modeIntermediate">Intermediate</div>
+                    <div class="mode-desc" data-i18n="modeIntermediateDesc">Balanced challenge for improving skills</div>
+                    <div class="mode-stats">
+                        <div>⚡ <span data-i18n="speedNormal">Speed: Normal</span></div>
+                        <div>❤️ <span data-i18n="hpMedium">HP: Medium</span></div>
+                        <div>⏱️ <span data-i18n="timeNormal">Time: 20s</span></div>
+                    </div>
+                </div>
+
+                <div class="mode-card advance" onclick="startGameWithMode('advance')">
+                    <div class="mode-icon">🔥</div>
+                    <div class="mode-name" data-i18n="modeAdvance">Advanced</div>
+                    <div class="mode-desc" data-i18n="modeAdvanceDesc">Fast-paced action for skilled typers</div>
+                    <div class="mode-stats">
+                        <div>⚡ <span data-i18n="speedFast">Speed: Fast</span></div>
+                        <div>❤️ <span data-i18n="hpHigh">HP: High</span></div>
+                        <div>⏱️ <span data-i18n="timeLess">Time: 15s</span></div>
+                    </div>
+                </div>
+
+                <div class="mode-card devil" onclick="startGameWithMode('devil')">
+                    <div class="mode-icon">😈</div>
+                    <div class="mode-name" data-i18n="modeDevil">Devil</div>
+                    <div class="mode-desc" data-i18n="modeDevilDesc">Extreme difficulty! Only for masters</div>
+                    <div class="mode-stats">
+                        <div>⚡ <span data-i18n="speedVeryFast">Speed: Very Fast</span></div>
+                        <div>❤️ <span data-i18n="hpVeryHigh">HP: Very High</span></div>
+                        <div>⏱️ <span data-i18n="timeShort">Time: 12s</span></div>
+                    </div>
+                </div>
+
+                <div class="mode-card god" onclick="startGameWithMode('god')">
+                    <div class="mode-icon">👑</div>
+                    <div class="mode-name" data-i18n="modeGod">God Level</div>
+                    <div class="mode-desc" data-i18n="modeGodDesc">Impossible mode! Are you ready?</div>
+                    <div class="mode-stats">
+                        <div>⚡ <span data-i18n="speedInsane">Speed: INSANE</span></div>
+                        <div>❤️ <span data-i18n="hpExtreme">HP: Extreme</span></div>
+                        <div>⏱️ <span data-i18n="timeVeryShort">Time: 10s</span></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn" onclick="showScreen('start')" data-i18n="back">← Back</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen">
+            <div id="hud">
+                <div class="hud-item">
+                    <span data-i18n="health">❤️ Health:</span>
+                    <div id="healthBar">
+                        <div id="healthFill" style="width: 100%"></div>
+                    </div>
+                    <span id="healthText">100/100</span>
+                </div>
+                <div class="hud-item">
+                    <span data-i18n="time">⏱️ Time:</span>
+                    <div id="timerBar">
+                        <div id="timerFill" style="width: 100%"></div>
+                    </div>
+                    <span id="timerText">15s</span>
+                </div>
+                <div class="hud-item">
+                    <span data-i18n="coins">💰 Coins:</span> <span id="coinDisplay">0</span>
+                </div>
+                <div class="hud-item">
+                    <span data-i18n="round">🌊 Round:</span> <span id="roundDisplay">1</span>
+                </div>
+                <div class="hud-item">
+                    <span data-i18n="score">🎯 Score:</span> <span id="scoreDisplay">0</span>
+                </div>
+            </div>
+            <div id="gameCanvas">
+                <div id="activeAbilities"></div>
+                <div id="comboDisplay"></div>
+            </div>
+            <div id="typingArea">
+                <input type="text" id="typingInput" data-i18n-placeholder="typePlaceholder" placeholder="Start typing to attack zombies..." autocomplete="off">
+            </div>
+        </div>
+
+        <!-- Shop Screen -->
+        <div id="shopScreen">
+            <h2 data-i18n="shopTitle">🛒 Upgrade Shop</h2>
+            <div class="shop-stats">
+                <span data-i18n="roundComplete">Round</span> <span id="shopRound">1</span> <span data-i18n="complete">Complete!</span> | <span data-i18n="coins">Coins:</span> <span id="shopCoins">0</span>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+            <button class="btn" id="continueBtn" onclick="nextRound()" data-i18n="continue">Continue to Next Round ➡️</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen">
+            <h2 data-i18n="gameOver">💀 GAME OVER 💀</h2>
+            <div class="final-stats">
+                <p><span data-i18n="survived">You survived</span> <span id="finalRound">0</span> <span data-i18n="rounds">rounds!</span></p>
+                <p><span data-i18n="finalScore">Final Score:</span> <span id="finalScore">0</span></p>
+                <p><span data-i18n="zombiesDefeated">Zombies Defeated:</span> <span id="finalKills">0</span></p>
+            </div>
+            <input type="text" id="nameInput" data-i18n-placeholder="enterName" placeholder="Enter your name" maxlength="20">
+            <button class="btn" onclick="saveScore()" data-i18n="saveScore">💾 Save Score</button>
+            <div id="leaderboard"></div>
+            <button class="btn" onclick="location.reload()" data-i18n="playAgain">🔄 Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Language System
+        const translations = {
+            en: {
+                title: "🧟 Type vs Zombies 🧟",
+                subtitle: "Type words and keyboard shortcuts to survive the zombie apocalypse! Train your typing skills while having fun!",
+                howToPlay: "📖 How to Play:",
+                instruction1: "Type words shown above zombies to damage them",
+                instruction2: "🏅 Golden zombies need keyboard shortcuts (Ctrl+C, Ctrl+T, Ctrl+F, etc.) - Worth bonus coins!",
+                instruction3: "🔴 Red zombies require fast typing - Worth big rewards!",
+                instruction4: "💙 Blue zombies are super fast - Type quick!",
+                instruction5: "Survive timed rounds to earn coins and upgrades",
+                startGame: "🎮 Start Game",
+                selectDifficulty: "Select Difficulty Level",
+                modeBeginner: "Beginner",
+                modeBeginnerDesc: "Perfect for learning! Slow zombies, more time",
+                modeIntermediate: "Intermediate",
+                modeIntermediateDesc: "Balanced challenge for improving skills",
+                modeAdvance: "Advanced",
+                modeAdvanceDesc: "Fast-paced action for skilled typers",
+                modeDevil: "Devil",
+                modeDevilDesc: "Extreme difficulty! Only for masters",
+                modeGod: "God Level",
+                modeGodDesc: "Impossible mode! Are you ready?",
+                speedVerySlow: "Speed: Very Slow",
+                speedNormal: "Speed: Normal",
+                speedFast: "Speed: Fast",
+                speedVeryFast: "Speed: Very Fast",
+                speedInsane: "Speed: INSANE",
+                hpLow: "HP: Low",
+                hpMedium: "HP: Medium",
+                hpHigh: "HP: High",
+                hpVeryHigh: "HP: Very High",
+                hpExtreme: "HP: Extreme",
+                timeVeryLong: "Time: 25s",
+                timeNormal: "Time: 20s",
+                timeLess: "Time: 15s",
+                timeShort: "Time: 12s",
+                timeVeryShort: "Time: 10s",
+                back: "← Back",
+                health: "❤️ Health:",
+                time: "⏱️ Time:",
+                coins: "💰 Coins:",
+                round: "🌊 Round:",
+                score: "🎯 Score:",
+                typePlaceholder: "Start typing to attack zombies...",
+                shopTitle: "🛒 Upgrade Shop",
+                roundComplete: "Round",
+                complete: "Complete!",
+                continue: "Continue to Next Round ➡️",
+                gameOver: "💀 GAME OVER 💀",
+                survived: "You survived",
+                rounds: "rounds!",
+                finalScore: "Final Score:",
+                zombiesDefeated: "Zombies Defeated:",
+                enterName: "Enter your name",
+                saveScore: "💾 Save Score",
+                playAgain: "🔄 Play Again",
+                leaderboardTitle: "🏆 Leaderboard 🏆",
+                noScores: "No scores yet!",
+                upgradeHealth: "❤️ Max Health +20",
+                upgradeHealthDesc: "Increase maximum health",
+                upgradeDamage: "⚔️ Damage +5",
+                upgradeDamageDesc: "Deal more damage per hit",
+                upgradeFireRate: "⚡ Fire Rate +0.5",
+                upgradeFireRateDesc: "Type faster attacks",
+                upgradeHeal: "💚 Heal to Full",
+                upgradeHealDesc: "Restore all health",
+                upgradeAutoHeal: "🔄 Auto-Heal +1/s",
+                upgradeAutoHealDesc: "Regenerate health over time",
+                upgradeShield: "🛡️ Shield (10s)",
+                upgradeShieldDesc: "Invincibility for 10 seconds",
+                upgradeSlowmo: "🐌 Slow-Mo (15s)",
+                upgradeSlowmoDesc: "Slow down all zombies",
+                upgradeMultishot: "🎯 Multi-Shot (10s)",
+                upgradeMultishotDesc: "Damage all zombies with same word",
+                upgradeRapidfire: "🔥 Rapid Fire (8s)",
+                upgradeRapidfireDesc: "Triple damage per hit",
+                buy: "Buy",
+                notEnough: "Not Enough Coins"
+            },
+            zh: {
+                title: "🧟 打字大戰殭屍 🧟",
+                subtitle: "通過打字和鍵盤快捷鍵消滅殭屍！在遊戲中訓練你的打字技能！",
+                howToPlay: "📖 遊戲玩法：",
+                instruction1: "輸入殭屍上方顯示的文字來攻擊它們",
+                instruction2: "🏅 金色殭屍需要鍵盤快捷鍵（Ctrl+C、Ctrl+T、Ctrl+F等）- 獎勵硬幣更多！",
+                instruction3: "🔴 紅色殭屍需要快速打字 - 獎勵豐厚！",
+                instruction4: "💙 藍色殭屍速度超快 - 快速打字！",
+                instruction5: "在限時回合中存活以賺取硬幣和升級",
+                startGame: "🎮 開始遊戲",
+                selectDifficulty: "選擇難度等級",
+                modeBeginner: "初學者",
+                modeBeginnerDesc: "非常適合學習！殭屍緩慢，時間充足",
+                modeIntermediate: "中級",
+                modeIntermediateDesc: "平衡的挑戰，提升技能",
+                modeAdvance: "高級",
+                modeAdvanceDesc: "快節奏動作，適合熟練打字者",
+                modeDevil: "惡魔",
+                modeDevilDesc: "極端難度！只適合大師",
+                modeGod: "神級",
+                modeGodDesc: "不可能的模式！你準備好了嗎？",
+                speedVerySlow: "速度：非常慢",
+                speedNormal: "速度：普通",
+                speedFast: "速度：快",
+                speedVeryFast: "速度：非常快",
+                speedInsane: "速度：瘋狂",
+                hpLow: "生命值：低",
+                hpMedium: "生命值：中等",
+                hpHigh: "生命值：高",
+                hpVeryHigh: "生命值：非常高",
+                hpExtreme: "生命值：極高",
+                timeVeryLong: "時間：25秒",
+                timeNormal: "時間：20秒",
+                timeLess: "時間：15秒",
+                timeShort: "時間：12秒",
+                timeVeryShort: "時間：10秒",
+                back: "← 返回",
+                health: "❤️ 生命值：",
+                time: "⏱️ 時間：",
+                coins: "💰 硬幣：",
+                round: "🌊 回合：",
+                score: "🎯 分數：",
+                typePlaceholder: "開始打字攻擊殭屍...",
+                shopTitle: "🛒 升級商店",
+                roundComplete: "回合",
+                complete: "完成！",
+                continue: "繼續下一回合 ➡️",
+                gameOver: "💀 遊戲結束 💀",
+                survived: "你存活了",
+                rounds: "回合！",
+                finalScore: "最終分數：",
+                zombiesDefeated: "消滅殭屍數：",
+                enterName: "輸入你的名字",
+                saveScore: "💾 保存分數",
+                playAgain: "🔄 再玩一次",
+                leaderboardTitle: "🏆 排行榜 🏆",
+                noScores: "還沒有分數！",
+                upgradeHealth: "❤️ 最大生命值 +20",
+                upgradeHealthDesc: "增加最大生命值",
+                upgradeDamage: "⚔️ 傷害 +5",
+                upgradeDamageDesc: "每次攻擊造成更多傷害",
+                upgradeFireRate: "⚡ 射速 +0.5",
+                upgradeFireRateDesc: "更快的攻擊速度",
+                upgradeHeal: "💚 完全治療",
+                upgradeHealDesc: "恢復所有生命值",
+                upgradeAutoHeal: "🔄 自動治療 +1/秒",
+                upgradeAutoHealDesc: "隨時間恢復生命值",
+                upgradeShield: "🛡️ 護盾（10秒）",
+                upgradeShieldDesc: "10秒無敵狀態",
+                upgradeSlowmo: "🐌 慢動作（15秒）",
+                upgradeSlowmoDesc: "減慢所有殭屍速度",
+                upgradeMultishot: "🎯 多重射擊（10秒）",
+                upgradeMultishotDesc: "同時傷害相同文字的殭屍",
+                upgradeRapidfire: "🔥 快速射擊（8秒）",
+                upgradeRapidfireDesc: "三倍傷害",
+                buy: "購買",
+                notEnough: "硬幣不足"
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            updateTranslations();
+        }
+
+        function updateTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang][key]) {
+                    el.placeholder = translations[currentLang][key];
+                }
+            });
+        }
+
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Sound effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'hit':
+                    oscillator.frequency.value = 300;
+                    gainNode.gain.value = 0.1;
+                    oscillator.type = 'square';
+                    break;
+                case 'kill':
+                    oscillator.frequency.value = 500;
+                    gainNode.gain.value = 0.15;
+                    oscillator.type = 'sine';
+                    break;
+                case 'combo':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.value = 0.2;
+                    oscillator.type = 'triangle';
+                    break;
+                case 'damage':
+                    oscillator.frequency.value = 150;
+                    gainNode.gain.value = 0.2;
+                    oscillator.type = 'sawtooth';
+                    break;
+            }
+
+            const now = audioContext.currentTime;
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.2);
+        }
+
+        // Difficulty modes
+        const difficultySettings = {
+            beginner: {
+                speedMultiplier: 0.5,
+                hpMultiplier: 0.6,
+                timeMultiplier: 1.67,
+                spawnRate: 3.5,
+                damageMultiplier: 1.5
+            },
+            intermediate: {
+                speedMultiplier: 1,
+                hpMultiplier: 1,
+                timeMultiplier: 1,
+                spawnRate: 2.5,
+                damageMultiplier: 1
+            },
+            advance: {
+                speedMultiplier: 1.5,
+                hpMultiplier: 1.4,
+                timeMultiplier: 0.75,
+                spawnRate: 1.8,
+                damageMultiplier: 0.8
+            },
+            devil: {
+                speedMultiplier: 2.2,
+                hpMultiplier: 2,
+                timeMultiplier: 0.6,
+                spawnRate: 1.2,
+                damageMultiplier: 0.6
+            },
+            god: {
+                speedMultiplier: 3,
+                hpMultiplier: 3,
+                timeMultiplier: 0.5,
+                spawnRate: 0.8,
+                damageMultiplier: 0.5
+            }
+        };
+
+        // Game State
+        const gameState = {
+            health: 100,
+            maxHealth: 100,
+            coins: 0,
+            round: 1,
+            score: 0,
+            zombiesKilled: 0,
+            zombies: [],
+            nextZombieId: 0,
+            gameRunning: false,
+            roundActive: false,
+            roundTimeLimit: 15,
+            roundTimeRemaining: 15,
+            damage: 10,
+            fireRate: 1,
+            autoHeal: 0,
+            combo: 0,
+            lastKillTime: 0,
+            difficulty: 'intermediate',
+            achievements: {
+                firstKill: false,
+                combo5: false,
+                combo10: false,
+                round5: false,
+                round10: false,
+                perfectRound: false
+            },
+            abilities: {
+                shield: { active: false, duration: 0 },
+                slowmo: { active: false, duration: 0 },
+                multishot: { active: false, duration: 0 },
+                rapidfire: { active: false, duration: 0 }
+            }
+        };
+
+        // Word lists
+        const words = [
+            'cat', 'dog', 'house', 'tree', 'book', 'chair', 'table', 'phone', 'mouse', 'keyboard',
+            'computer', 'window', 'door', 'light', 'water', 'fire', 'earth', 'space', 'time', 'music',
+            'friend', 'family', 'school', 'teacher', 'student', 'learn', 'write', 'read', 'think', 'create',
+            'happy', 'smile', 'laugh', 'play', 'game', 'sport', 'ball', 'run', 'jump', 'swim',
+            'food', 'apple', 'orange', 'banana', 'pizza', 'cake', 'cookie', 'bread', 'milk', 'juice',
+            'summer', 'winter', 'spring', 'autumn', 'cloud', 'rain', 'snow', 'sun', 'moon', 'star'
+        ];
+
+        const shortcuts = [
+            { display: 'Ctrl+C', key: 'c', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+V', key: 'v', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+X', key: 'x', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+Z', key: 'z', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+A', key: 'a', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+S', key: 's', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+T', key: 't', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+W', key: 'w', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+F', key: 'f', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+P', key: 'p', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+N', key: 'n', ctrl: true, alt: false, shift: false, meta: false },
+            { display: 'Ctrl+Shift+T', key: 't', ctrl: true, alt: false, shift: true, meta: false },
+            { display: 'Ctrl+Shift+N', key: 'n', ctrl: true, alt: false, shift: true, meta: false }
+        ];
+
+        const bonusWords = [
+            'quick', 'speed', 'rapid', 'flash', 'swift', 'agile', 'turbo', 'boost', 'power', 'super'
+        ];
+
+        // Shop items
+        const shopItems = [
+            {
+                id: 'health',
+                nameKey: 'upgradeHealth',
+                descKey: 'upgradeHealthDesc',
+                cost: 50,
+                apply: () => {
+                    gameState.maxHealth += 20;
+                    gameState.health = Math.min(gameState.health + 20, gameState.maxHealth);
+                }
+            },
+            {
+                id: 'damage',
+                nameKey: 'upgradeDamage',
+                descKey: 'upgradeDamageDesc',
+                cost: 40,
+                apply: () => {
+                    gameState.damage += 5;
+                }
+            },
+            {
+                id: 'firerate',
+                nameKey: 'upgradeFireRate',
+                descKey: 'upgradeFireRateDesc',
+                cost: 60,
+                apply: () => {
+                    gameState.fireRate += 0.5;
+                }
+            },
+            {
+                id: 'heal',
+                nameKey: 'upgradeHeal',
+                descKey: 'upgradeHealDesc',
+                cost: 30,
+                apply: () => {
+                    gameState.health = gameState.maxHealth;
+                }
+            },
+            {
+                id: 'autoheal',
+                nameKey: 'upgradeAutoHeal',
+                descKey: 'upgradeAutoHealDesc',
+                cost: 100,
+                apply: () => {
+                    gameState.autoHeal += 1;
+                }
+            },
+            {
+                id: 'shield',
+                nameKey: 'upgradeShield',
+                descKey: 'upgradeShieldDesc',
+                cost: 150,
+                oneTime: true,
+                apply: () => {
+                    gameState.abilities.shield.active = true;
+                    gameState.abilities.shield.duration = 10;
+                }
+            },
+            {
+                id: 'slowmo',
+                nameKey: 'upgradeSlowmo',
+                descKey: 'upgradeSlowmoDesc',
+                cost: 80,
+                oneTime: true,
+                apply: () => {
+                    gameState.abilities.slowmo.active = true;
+                    gameState.abilities.slowmo.duration = 15;
+                }
+            },
+            {
+                id: 'multishot',
+                nameKey: 'upgradeMultishot',
+                descKey: 'upgradeMultishotDesc',
+                cost: 120,
+                oneTime: true,
+                apply: () => {
+                    gameState.abilities.multishot.active = true;
+                    gameState.abilities.multishot.duration = 10;
+                }
+            },
+            {
+                id: 'rapidfire',
+                nameKey: 'upgradeRapidfire',
+                descKey: 'upgradeRapidfireDesc',
+                cost: 100,
+                oneTime: true,
+                apply: () => {
+                    gameState.abilities.rapidfire.active = true;
+                    gameState.abilities.rapidfire.duration = 8;
+                }
+            }
+        ];
+
+        // DOM Elements
+        const screens = {
+            start: document.getElementById('startScreen'),
+            mode: document.getElementById('modeScreen'),
+            game: document.getElementById('gameScreen'),
+            shop: document.getElementById('shopScreen'),
+            gameOver: document.getElementById('gameOverScreen')
+        };
+
+        const elements = {
+            healthFill: document.getElementById('healthFill'),
+            healthText: document.getElementById('healthText'),
+            timerFill: document.getElementById('timerFill'),
+            timerText: document.getElementById('timerText'),
+            coins: document.getElementById('coinDisplay'),
+            round: document.getElementById('roundDisplay'),
+            score: document.getElementById('scoreDisplay'),
+            typingInput: document.getElementById('typingInput'),
+            gameCanvas: document.getElementById('gameCanvas'),
+            activeAbilities: document.getElementById('activeAbilities'),
+            comboDisplay: document.getElementById('comboDisplay')
+        };
+
+        // Show screen
+        function showScreen(screen) {
+            Object.values(screens).forEach(s => s.style.display = 'none');
+            screens[screen].style.display = 'flex';
+        }
+
+        // Show mode selection
+        function showModeSelection() {
+            showScreen('mode');
+        }
+
+        // Start game with selected mode
+        function startGameWithMode(mode) {
+            gameState.difficulty = mode;
+            gameState.health = gameState.maxHealth;
+            gameState.coins = 0;
+            gameState.round = 1;
+            gameState.score = 0;
+            gameState.zombiesKilled = 0;
+            gameState.combo = 0;
+            gameState.gameRunning = true;
+
+            showScreen('game');
+            updateHUD();
+            startRound();
+
+            elements.typingInput.focus();
+        }
+
+        // Calculate round time based on difficulty and round number
+        function getRoundTime(round) {
+            const settings = difficultySettings[gameState.difficulty];
+            let baseTime;
+
+            if (round <= 5) {
+                baseTime = 15;
+            } else if (round <= 10) {
+                baseTime = 20;
+            } else if (round <= 15) {
+                baseTime = 25;
+            } else {
+                baseTime = 20 + Math.floor(Math.random() * 16);
+            }
+
+            return Math.max(5, Math.floor(baseTime * settings.timeMultiplier));
+        }
+
+        // Start new round
+        function startRound() {
+            gameState.roundActive = true;
+            gameState.roundTimeLimit = getRoundTime(gameState.round);
+            gameState.roundTimeRemaining = gameState.roundTimeLimit;
+            gameState.roundDamageTaken = 0;
+
+            elements.typingInput.value = '';
+            elements.typingInput.disabled = false;
+            elements.typingInput.focus();
+
+            gameState.zombies.forEach(z => removeZombie(z.id));
+            gameState.zombies = [];
+
+            updateTimerDisplay();
+
+            // Check round achievements
+            if (gameState.round === 5 && !gameState.achievements.round5) {
+                gameState.achievements.round5 = true;
+                showAchievement(currentLang === 'zh' ? '🏆 成就解鎖：存活5回合！' : '🏆 Achievement: Survived 5 Rounds!');
+            } else if (gameState.round === 10 && !gameState.achievements.round10) {
+                gameState.achievements.round10 = true;
+                showAchievement(currentLang === 'zh' ? '🏆 成就解鎖：存活10回合！' : '🏆 Achievement: Survived 10 Rounds!');
+            }
+        }
+
+        // Spawn zombie with random type
+        function spawnZombie() {
+            const rand = Math.random();
+            let zombieType;
+
+            if (rand < 0.15) {
+                zombieType = 'shortcut';
+            } else if (rand < 0.25) {
+                zombieType = 'bonus';
+            } else if (rand < 0.35) {
+                zombieType = 'speed';
+            } else {
+                zombieType = 'regular';
+            }
+
+            let word, isShortcut = false;
+            const settings = difficultySettings[gameState.difficulty];
+            let baseSpeed = (12 + gameState.round * 1.5 + (Math.random() * 5 - 2.5)) * settings.speedMultiplier;
+            let baseHp = (15 + gameState.round * 3 + (Math.random() * 10 - 5)) * settings.hpMultiplier;
+            let coinValue = 5;
+
+            switch (zombieType) {
+                case 'shortcut':
+                    isShortcut = true;
+                    word = shortcuts[Math.floor(Math.random() * shortcuts.length)];
+                    baseHp = (25 + gameState.round * 8) * settings.hpMultiplier;
+                    coinValue = 20;
+                    break;
+                case 'bonus':
+                    word = bonusWords[Math.floor(Math.random() * bonusWords.length)];
+                    baseHp = (30 + gameState.round * 10) * settings.hpMultiplier;
+                    coinValue = 30;
+                    baseSpeed *= 0.8;
+                    break;
+                case 'speed':
+                    word = words[Math.floor(Math.random() * words.length)];
+                    baseSpeed *= 2;
+                    baseHp *= 0.7;
+                    coinValue = 15;
+                    break;
+                default:
+                    word = words[Math.floor(Math.random() * words.length)];
+            }
+
+            const zombie = {
+                id: gameState.nextZombieId++,
+                type: zombieType,
+                isShortcut: isShortcut,
+                word: word,
+                typed: '',
+                x: Math.random() * (window.innerWidth - 100),
+                speed: baseSpeed,
+                hp: Math.max(10, baseHp),
+                maxHp: Math.max(10, baseHp),
+                coinValue: coinValue
+            };
+
+            gameState.zombies.push(zombie);
+            renderZombie(zombie);
+        }
+
+        // Render zombie
+        function renderZombie(zombie) {
+            const zombieEl = document.createElement('div');
+            zombieEl.className = 'zombie ' + zombie.type;
+            zombieEl.id = 'zombie-' + zombie.id;
+            zombieEl.style.left = zombie.x + 'px';
+            zombieEl.style.top = '-150px'; // Start from top of screen
+
+            const wordDisplay = zombie.isShortcut ? zombie.word.display : zombie.word;
+
+            zombieEl.innerHTML = `
+                <div class="zombie-body">
+                    <div class="zombie-head">
+                        <div class="zombie-eyes">
+                            <div class="eye"></div>
+                            <div class="eye"></div>
+                        </div>
+                        <div class="zombie-mouth"></div>
+                    </div>
+                    <div class="zombie-arms">
+                        <div class="arm left"></div>
+                        <div class="arm right"></div>
+                    </div>
+                    <div class="zombie-legs">
+                        <div class="leg"></div>
+                        <div class="leg"></div>
+                    </div>
+                </div>
+                <div class="zombie-word" id="word-${zombie.id}">${wordDisplay}</div>
+                <div class="zombie-hp-bar">
+                    <div class="zombie-hp-fill" id="hp-${zombie.id}" style="width: 100%"></div>
+                </div>
+            `;
+
+            elements.gameCanvas.appendChild(zombieEl);
+        }
+
+        // Update zombie positions
+        function updateZombies() {
+            if (!gameState.roundActive) return;
+
+            const speedMultiplier = gameState.abilities.slowmo.active ? 0.3 : 1;
+            const canvasHeight = elements.gameCanvas.offsetHeight;
+
+            gameState.zombies.forEach(zombie => {
+                const zombieEl = document.getElementById('zombie-' + zombie.id);
+                if (!zombieEl) return;
+
+                const currentTop = parseInt(zombieEl.style.top || '-150');
+                const newTop = currentTop + (zombie.speed / 60) * speedMultiplier;
+
+                zombieEl.style.top = newTop + 'px';
+
+                // Check if zombie reached the bottom (typing area)
+                if (newTop >= canvasHeight - 100) {
+                    if (!gameState.abilities.shield.active) {
+                        const damage = zombie.type === 'bonus' ? 20 : 10;
+                        gameState.health -= damage;
+                        gameState.roundDamageTaken += damage;
+                        playSound('damage');
+                        updateHUD();
+
+                        if (gameState.health <= 0) {
+                            gameOver();
+                        }
+                    }
+
+                    removeZombie(zombie.id);
+                    gameState.combo = 0;
+                }
+            });
+        }
+
+        // Remove zombie
+        function removeZombie(zombieId) {
+            const index = gameState.zombies.findIndex(z => z.id === zombieId);
+            if (index > -1) {
+                gameState.zombies.splice(index, 1);
+            }
+
+            const zombieEl = document.getElementById('zombie-' + zombieId);
+            if (zombieEl) {
+                zombieEl.remove();
+            }
+        }
+
+        // Handle typing
+        elements.typingInput.addEventListener('input', (e) => {
+            const input = e.target.value.toLowerCase().trim();
+
+            // Reset all zombie typed states when input is empty
+            if (!input) {
+                gameState.zombies.forEach(zombie => {
+                    if (!zombie.isShortcut) {
+                        zombie.typed = '';
+                        updateZombieWord(zombie);
+                    }
+                });
+                return;
+            }
+
+            const matchingZombies = gameState.zombies.filter(z =>
+                !z.isShortcut && z.word.toLowerCase().startsWith(input)
+            );
+
+            // Reset zombies that no longer match
+            gameState.zombies.forEach(zombie => {
+                if (!zombie.isShortcut && !zombie.word.toLowerCase().startsWith(input)) {
+                    zombie.typed = '';
+                    updateZombieWord(zombie);
+                }
+            });
+
+            if (matchingZombies.length > 0) {
+                matchingZombies.forEach(zombie => {
+                    zombie.typed = input;
+                    updateZombieWord(zombie);
+
+                    if (input === zombie.word.toLowerCase()) {
+                        const settings = difficultySettings[gameState.difficulty];
+                        const damageMultiplier = gameState.abilities.rapidfire.active ? 3 : 1;
+                        const bonusMultiplier = zombie.type === 'bonus' ? 2 : 1;
+                        damageZombie(zombie, gameState.damage * gameState.fireRate * damageMultiplier * bonusMultiplier * settings.damageMultiplier);
+
+                        if (gameState.abilities.multishot.active) {
+                            matchingZombies.forEach(z => {
+                                if (z.id !== zombie.id) {
+                                    damageZombie(z, gameState.damage * gameState.fireRate * damageMultiplier * settings.damageMultiplier);
+                                }
+                            });
+                        }
+
+                        e.target.value = '';
+                        // Reset all typed states after killing
+                        gameState.zombies.forEach(z => {
+                            if (!z.isShortcut) {
+                                z.typed = '';
+                                updateZombieWord(z);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        // Handle keyboard shortcuts
+        elements.typingInput.addEventListener('keydown', (e) => {
+            const shortcutZombies = gameState.zombies.filter(z => z.isShortcut);
+
+            shortcutZombies.forEach(zombie => {
+                const shortcut = zombie.word;
+
+                const matches =
+                    e.key.toLowerCase() === shortcut.key.toLowerCase() &&
+                    e.ctrlKey === shortcut.ctrl &&
+                    e.altKey === shortcut.alt &&
+                    e.shiftKey === shortcut.shift &&
+                    e.metaKey === shortcut.meta;
+
+                if (matches) {
+                    e.preventDefault();
+                    const settings = difficultySettings[gameState.difficulty];
+                    const damageMultiplier = gameState.abilities.rapidfire.active ? 3 : 1;
+                    damageZombie(zombie, gameState.damage * gameState.fireRate * 2.5 * damageMultiplier * settings.damageMultiplier);
+                    elements.typingInput.value = '';
+                }
+            });
+        });
+
+        // Update zombie word display
+        function updateZombieWord(zombie) {
+            const wordEl = document.getElementById('word-' + zombie.id);
+            if (!wordEl) return;
+
+            const word = zombie.word;
+            const typed = zombie.typed;
+
+            if (typed) {
+                wordEl.innerHTML = `<span class="typed">${word.substring(0, typed.length)}</span>${word.substring(typed.length)}`;
+            } else {
+                // Reset to original word when typed is empty
+                wordEl.textContent = word;
+            }
+        }
+
+        // Damage zombie
+        function damageZombie(zombie, damage) {
+            zombie.hp -= damage;
+
+            const hpEl = document.getElementById('hp-' + zombie.id);
+            if (hpEl) {
+                hpEl.style.width = Math.max(0, (zombie.hp / zombie.maxHp) * 100) + '%';
+            }
+
+            createParticles(zombie.x + 35, 300, '#ff4757', 10);
+            playSound('hit');
+
+            if (zombie.hp <= 0) {
+                const now = Date.now();
+                if (now - gameState.lastKillTime < 2000) {
+                    gameState.combo++;
+                } else {
+                    gameState.combo = 1;
+                }
+                gameState.lastKillTime = now;
+
+                if (gameState.combo >= 3) {
+                    showCombo(gameState.combo);
+                    playSound('combo');
+                }
+
+                // Check combo achievements
+                if (gameState.combo === 5 && !gameState.achievements.combo5) {
+                    gameState.achievements.combo5 = true;
+                    showAchievement(currentLang === 'zh' ? '🏆 成就解鎖：5連擊！' : '🏆 Achievement: 5 Combo!');
+                } else if (gameState.combo === 10 && !gameState.achievements.combo10) {
+                    gameState.achievements.combo10 = true;
+                    showAchievement(currentLang === 'zh' ? '🏆 成就解鎖：10連擊！驚人！' : '🏆 Achievement: 10 Combo! Amazing!');
+                }
+
+                // Check first kill
+                if (!gameState.achievements.firstKill) {
+                    gameState.achievements.firstKill = true;
+                    showAchievement(currentLang === 'zh' ? '🏆 第一次擊殺！' : '🏆 First Kill!');
+                }
+
+                const comboBonus = Math.floor(gameState.combo / 3);
+                const coinReward = zombie.coinValue + comboBonus;
+
+                gameState.coins += coinReward;
+                gameState.score += coinReward * 10 * Math.max(1, gameState.combo);
+                gameState.zombiesKilled++;
+                updateHUD();
+                playSound('kill');
+                removeZombie(zombie.id);
+            }
+        }
+
+        // Show combo display
+        function showCombo(combo) {
+            elements.comboDisplay.textContent = `${combo}x COMBO!`;
+            elements.comboDisplay.style.opacity = '1';
+
+            setTimeout(() => {
+                elements.comboDisplay.style.opacity = '0';
+            }, 1000);
+        }
+
+        // Show achievement toast
+        function showAchievement(text) {
+            const toast = document.createElement('div');
+            toast.className = 'achievement-toast';
+            toast.textContent = text;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Create particle effects
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.bottom = y + 'px';
+                particle.style.width = '8px';
+                particle.style.height = '8px';
+                particle.style.background = color;
+                particle.style.borderRadius = '50%';
+
+                const angle = (Math.PI * 2 * i) / count;
+                const distance = 50 + Math.random() * 50;
+                particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+
+                elements.gameCanvas.appendChild(particle);
+
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        // Update HUD
+        function updateHUD() {
+            elements.healthFill.style.width = (gameState.health / gameState.maxHealth * 100) + '%';
+            elements.healthText.textContent = Math.max(0, gameState.health) + '/' + gameState.maxHealth;
+            elements.coins.textContent = gameState.coins;
+            elements.round.textContent = gameState.round;
+            elements.score.textContent = gameState.score;
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            const percentage = (gameState.roundTimeRemaining / gameState.roundTimeLimit) * 100;
+            elements.timerFill.style.width = percentage + '%';
+            elements.timerText.textContent = Math.ceil(gameState.roundTimeRemaining) + 's';
+        }
+
+        // Round complete
+        function roundComplete() {
+            gameState.roundActive = false;
+
+            // Perfect round achievement
+            if (gameState.roundDamageTaken === 0 && !gameState.achievements.perfectRound) {
+                gameState.achievements.perfectRound = true;
+                showAchievement(currentLang === 'zh' ? '🏆 成就解鎖：完美回合！無傷通關！' : '🏆 Achievement: Perfect Round! No Damage!');
+                gameState.coins += 50; // Bonus for perfect round
+            }
+
+            gameState.coins += 30;
+            gameState.score += 200;
+            updateHUD();
+
+            showShop();
+        }
+
+        // Show shop
+        function showShop() {
+            document.getElementById('shopRound').textContent = gameState.round;
+            document.getElementById('shopCoins').textContent = gameState.coins;
+
+            const shopGrid = document.getElementById('shopGrid');
+            shopGrid.innerHTML = '';
+
+            shopItems.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'shop-item';
+
+                const canAfford = gameState.coins >= item.cost;
+
+                itemEl.innerHTML = `
+                    <h3>${translations[currentLang][item.nameKey]}</h3>
+                    <p>${translations[currentLang][item.descKey]}</p>
+                    <div class="price">💰 ${item.cost}</div>
+                    <button onclick="buyItem('${item.id}')" ${!canAfford ? 'disabled' : ''}>
+                        ${canAfford ? translations[currentLang].buy : translations[currentLang].notEnough}
+                    </button>
+                `;
+
+                shopGrid.appendChild(itemEl);
+            });
+
+            showScreen('shop');
+        }
+
+        // Buy item
+        function buyItem(itemId) {
+            const item = shopItems.find(i => i.id === itemId);
+            if (!item || gameState.coins < item.cost) return;
+
+            gameState.coins -= item.cost;
+            item.apply();
+
+            updateHUD();
+            showShop();
+        }
+
+        // Next round
+        function nextRound() {
+            gameState.round++;
+            showScreen('game');
+            startRound();
+            elements.typingInput.focus();
+        }
+
+        // Game over
+        function gameOver() {
+            gameState.gameRunning = false;
+            gameState.roundActive = false;
+
+            document.getElementById('finalRound').textContent = gameState.round;
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalKills').textContent = gameState.zombiesKilled;
+
+            showScreen('gameOver');
+            displayLeaderboard();
+        }
+
+        // In-memory leaderboard
+        let leaderboardScores = [];
+
+        // Save score
+        function saveScore() {
+            const name = document.getElementById('nameInput').value.trim() || (currentLang === 'zh' ? '匿名' : 'Anonymous');
+
+            leaderboardScores.push({
+                name: name,
+                score: gameState.score,
+                round: gameState.round,
+                kills: gameState.zombiesKilled,
+                difficulty: gameState.difficulty,
+                date: new Date().toISOString()
+            });
+
+            leaderboardScores.sort((a, b) => b.score - a.score);
+            leaderboardScores.splice(10);
+
+            displayLeaderboard(leaderboardScores.length - 1);
+        }
+
+        // Display leaderboard
+        function displayLeaderboard(highlightIndex = -1) {
+            const scores = leaderboardScores;
+            const leaderboard = document.getElementById('leaderboard');
+
+            if (scores.length === 0) {
+                leaderboard.innerHTML = `<p style="text-align: center; padding: 20px;">${translations[currentLang].noScores}</p>`;
+                return;
+            }
+
+            leaderboard.innerHTML = `<h3 style="margin-bottom: 15px;">${translations[currentLang].leaderboardTitle}</h3>`;
+
+            scores.forEach((score, index) => {
+                const difficultyIcon = {
+                    beginner: '🌱',
+                    intermediate: '🎯',
+                    advance: '🔥',
+                    devil: '😈',
+                    god: '👑'
+                }[score.difficulty] || '🎯';
+
+                const entry = document.createElement('div');
+                entry.className = 'leaderboard-entry' + (index === highlightIndex ? ' current' : '');
+                entry.innerHTML = `
+                    <span>${index + 1}. ${score.name} ${difficultyIcon}</span>
+                    <span>${score.score} pts (R${score.round})</span>
+                `;
+                leaderboard.appendChild(entry);
+            });
+        }
+
+        // Game loop
+        let lastTime = 0;
+        let abilityTimer = 0;
+        let healTimer = 0;
+        let spawnTimer = 0;
+        let roundTimer = 0;
+
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (gameState.gameRunning && gameState.roundActive) {
+                updateZombies();
+
+                // Round timer
+                roundTimer += deltaTime / 1000;
+                if (roundTimer >= 1) {
+                    roundTimer = 0;
+                    gameState.roundTimeRemaining -= 1;
+                    updateTimerDisplay();
+
+                    if (gameState.roundTimeRemaining <= 0) {
+                        roundComplete();
+                    }
+                }
+
+                // Spawn zombies
+                const settings = difficultySettings[gameState.difficulty];
+                const spawnRate = Math.max(0.5, settings.spawnRate - (gameState.round * 0.05));
+                spawnTimer += deltaTime / 1000;
+                if (spawnTimer >= spawnRate) {
+                    spawnTimer = 0;
+                    spawnZombie();
+                }
+
+                // Update abilities
+                abilityTimer += deltaTime / 1000;
+                if (abilityTimer >= 1) {
+                    abilityTimer = 0;
+
+                    Object.keys(gameState.abilities).forEach(key => {
+                        const ability = gameState.abilities[key];
+                        if (ability.active) {
+                            ability.duration -= 1;
+                            if (ability.duration <= 0) {
+                                ability.active = false;
+                            }
+                        }
+                    });
+
+                    updateActiveAbilities();
+                }
+
+                // Auto-heal
+                if (gameState.autoHeal > 0) {
+                    healTimer += deltaTime / 1000;
+                    if (healTimer >= 1) {
+                        healTimer = 0;
+                        gameState.health = Math.min(gameState.health + gameState.autoHeal, gameState.maxHealth);
+                        updateHUD();
+                    }
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Update active abilities display
+        function updateActiveAbilities() {
+            const container = elements.activeAbilities;
+            container.innerHTML = '';
+
+            Object.keys(gameState.abilities).forEach(key => {
+                const ability = gameState.abilities[key];
+                if (ability.active) {
+                    const badge = document.createElement('div');
+                    badge.className = 'ability-badge';
+
+                    const names = {
+                        shield: '🛡️ ' + (currentLang === 'zh' ? '護盾' : 'Shield'),
+                        slowmo: '🐌 ' + (currentLang === 'zh' ? '慢動作' : 'Slow-Mo'),
+                        multishot: '🎯 ' + (currentLang === 'zh' ? '多重射擊' : 'Multi-Shot'),
+                        rapidfire: '🔥 ' + (currentLang === 'zh' ? '快速射擊' : 'Rapid Fire')
+                    };
+
+                    badge.textContent = `${names[key]} (${ability.duration}s)`;
+                    container.appendChild(badge);
+                }
+            });
+        }
+
+        // Start game loop
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
